@@ -18,8 +18,6 @@ async function init() {
     
     // Aplicar filtro padrão (oversold + 1h,4h) automaticamente
     await applyFilter();
-    
-    startAutoRefresh();
   } catch (err) {
     console.error('Erro de conexão:', err);
   }
@@ -196,11 +194,22 @@ async function applyFilter() {
   }
 }
 
+async function refreshData() {
+  const btn = document.getElementById('refreshDataBtn');
+  if (btn.classList.contains('updating')) return;
+  
+  btn.classList.add('updating');
+  
+  try {
+    // Reaplicar o filtro atual (mantendo status e timeframes)
+    await applyFilter();
+  } finally {
+    btn.classList.remove('updating');
+  }
+}
+
 function startAutoRefresh() {
-  // Recarregar página a cada 1 minuto
-  setInterval(() => {
-    location.reload();
-  }, 60000);
+  // AUTO-REFRESH DESATIVADO - Clique no botão 'Atualizar Dados' para atualizar
 }
 
 function clearFilter() {
@@ -225,6 +234,7 @@ function setStatus(msg, ready) {
 
 // Event listeners
 document.getElementById('resetBtn').addEventListener('click', clearFilter);
+document.getElementById('refreshDataBtn').addEventListener('click', refreshData);
 
 // Filtro - radio status (apenas um)
 document.querySelectorAll('.filter-radio[data-status]').forEach(btn => {
