@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stochastic RSI - Dashboard</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>📊 Stochastic RSI Dashboard</h1>
+            <div class="header-controls">
+                <span id="lastUpdate" class="last-update">-</span>
+            </div>
+        </header>
+
+        <div class="filter-bar">
+            <div class="filter-section">
+                <span class="filter-label">Status:</span>
+                <button class="filter-radio active" data-status="oversold">Oversold</button>
+                <button class="filter-radio" data-status="overbought">Overbought</button>
+                <button class="filter-radio" data-status="both">Both</button>
+            </div>
+            
+            <div class="filter-section">
+                <span class="filter-label">TF:</span>
+                <button class="filter-btn" data-timeframe="15m">15m</button>
+                <button class="filter-btn active" data-timeframe="1h">1h</button>
+                <button class="filter-btn active" data-timeframe="4h">4h</button>
+                <button class="filter-btn" data-timeframe="1d">1d</button>
+            </div>
+            
+            <button id="resetBtn" class="btn-reset">Reset</button>
+        </div>
+
+        <main>
+            <div class="table-wrapper">
+                <table class="data-table">
+                    <thead>
+                        <tr class="header-row">
+                            <th class="symbol-col">Par</th>
+                            <th class="timeframe-col" data-timeframe="15m">
+                                <div class="timeframe-header">15m</div>
+                            </th>
+                            <th class="timeframe-col" data-timeframe="1h">
+                                <div class="timeframe-header">1h</div>
+                            </th>
+                            <th class="timeframe-col" data-timeframe="4h">
+                                <div class="timeframe-header">4h</div>
+                            </th>
+                            <th class="timeframe-col" data-timeframe="1d">
+                                <div class="timeframe-header">1d</div>
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody id="tableBody">
+                        <tr class="loading-row">
+                            <td colspan="5">Carregando dados...</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="stats">
+                <div class="stat-item">
+                    <span class="stat-label">Total de Pares:</span>
+                    <span id="totalPairs" class="stat-value">-</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">Oversold:</span>
+                    <span id="oversoldCount" class="stat-value oversold">0</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">Overbought:</span>
+                    <span id="overboughtCount" class="stat-value overbought">0</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">Neutral:</span>
+                    <span id="neutralCount" class="stat-value neutral">0</span>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
+            <p>🔄 Auto-atualiza a cada 30s | Total: <span id="totalRows">0</span> pares</p>
+        </footer>
+    </div>
+    
+    <script src="/app.js"></script>
+</body>
+</html>

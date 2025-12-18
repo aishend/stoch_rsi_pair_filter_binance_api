@@ -1,0 +1,352 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+html, body {
+    height: 100%;
+    font-family: 'Arial', sans-serif;
+    background: #000;
+    color: #fff;
+    font-size: 12px;
+}
+
+.container {
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    padding: 5px;
+}
+
+header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px;
+    border-bottom: 1px solid #333;
+    margin-bottom: 5px;
+    gap: 10px;
+}
+
+h1 {
+    font-size: 16px;
+    font-weight: bold;
+    margin: 0;
+}
+
+.header-controls {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+}
+
+.status {
+    padding: 4px 8px;
+    border-radius: 3px;
+    font-size: 11px;
+    background: #333;
+    min-width: 60px;
+    text-align: center;
+}
+
+.status.ready {
+    background: #0a3a0a;
+    color: #00ff00;
+}
+
+.status.error {
+    background: #3a0a0a;
+    color: #ff0000;
+}
+
+.btn-refresh {
+    padding: 4px 8px;
+    border: 1px solid #0a0;
+    border-radius: 2px;
+    background: #000;
+    color: #0a0;
+    font-size: 11px;
+    cursor: pointer;
+    font-weight: bold;
+    transition: all 0.15s;
+}
+
+.btn-refresh:hover {
+    background: #0a0;
+    color: #000;
+}
+
+.btn-refresh.updating {
+    animation: spin 1s linear infinite;
+}
+
+.last-update {
+    font-size: 10px;
+    color: #666;
+}
+
+.filter-bar {
+    display: flex;
+    gap: 20px;
+    padding: 8px 10px;
+    background: #0a0a0a;
+    border: 1px solid #333;
+    margin-bottom: 5px;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.filter-section {
+    display: flex;
+    gap: 6px;
+    align-items: center;
+}
+
+.filter-label {
+    font-size: 10px;
+    color: #666;
+    font-weight: bold;
+    text-transform: uppercase;
+}
+
+.filter-btn,
+.filter-radio {
+    padding: 4px 8px;
+    font-size: 10px;
+    border: 1px solid #333;
+    background: #1a1a1a;
+    color: #aaa;
+    border-radius: 2px;
+    cursor: pointer;
+    transition: all 0.15s;
+}
+
+.filter-btn:hover {
+    border-color: #555;
+    color: #fff;
+}
+
+.filter-radio:hover {
+    border-color: #555;
+    color: #fff;
+}
+
+.filter-btn.active {
+    background: #0a0;
+    color: #000;
+    border-color: #0a0;
+    font-weight: bold;
+}
+
+.filter-radio.active {
+    background: #0a0;
+    color: #000;
+    border-color: #0a0;
+    font-weight: bold;
+}
+
+.btn-reset {
+    padding: 4px 8px;
+    background: #555;
+    color: #fff;
+    border: none;
+    border-radius: 2px;
+    font-size: 10px;
+    cursor: pointer;
+    margin-left: auto;
+}
+
+.btn-reset:hover {
+    background: #777;
+}
+
+main {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    overflow: hidden;
+}
+
+.table-wrapper {
+    flex: 1;
+    overflow: auto;
+    border: 1px solid #333;
+}
+
+.data-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-family: monospace;
+    font-size: 11px;
+}
+
+.data-table thead {
+    position: sticky;
+    top: 0;
+    background: #0a0a0a;
+    z-index: 10;
+}
+
+.header-row {
+    border-bottom: 1px solid #333;
+}
+
+.header-row th {
+    padding: 4px 4px;
+    text-align: center;
+    color: #0a0;
+    font-weight: bold;
+    background: #0a0a0a;
+    border-right: 1px solid #333;
+}
+
+.header-row th:last-child {
+    border-right: none;
+}
+
+.timeframe-header {
+    padding: 2px;
+}
+
+.symbol-col {
+    text-align: left;
+    padding: 4px 6px;
+    font-weight: bold;
+    min-width: 80px;
+    background: #0a0a0a;
+    position: sticky;
+    left: 0;
+    z-index: 5;
+    border-right: 1px solid #333;
+}
+
+.timeframe-col {
+    text-align: center;
+    padding: 4px 6px;
+    border-right: 1px solid #222;
+    min-width: 70px;
+}
+
+.timeframe-col:last-child {
+    border-right: none;
+}
+
+.data-row:nth-child(even) {
+    background: #0a0a0a;
+}
+
+.data-row:nth-child(odd) {
+    background: #000;
+}
+
+.cell-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.value {
+    font-weight: bold;
+}
+
+.status-oversold {
+    color: #0f0;
+    background: rgba(0, 255, 0, 0.1);
+}
+
+.status-overbought {
+    color: #f00;
+    background: rgba(255, 0, 0, 0.1);
+}
+
+.status-neutral {
+    color: #666;
+}
+
+.loading-row {
+    text-align: center;
+    color: #555;
+    padding: 20px !important;
+}
+
+.stats {
+    display: flex;
+    gap: 15px;
+    padding: 5px;
+    background: #0a0a0a;
+    border-top: 1px solid #333;
+    font-size: 11px;
+}
+
+.stat-item {
+    display: flex;
+    gap: 5px;
+    align-items: center;
+}
+
+.stat-label {
+    color: #666;
+}
+
+.stat-value {
+    font-weight: bold;
+    color: #aaa;
+}
+
+.stat-value.oversold {
+    color: #0f0;
+}
+
+.stat-value.overbought {
+    color: #f00;
+}
+
+.stat-value.neutral {
+    color: #666;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* Scroll otimizado para Raspberry Pi */
+::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+}
+
+::-webkit-scrollbar-track {
+    background: #000;
+}
+
+::-webkit-scrollbar-thumb {
+    background: #333;
+    border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: #555;
+}
+
+/* Melhorias de performance */
+* {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+/* Desabilitar animações pesadas em celulares */
+@media (max-width: 800px) {
+    .data-table tbody tr:hover {
+        background: inherit;
+    }
+    
+    .stats {
+        flex-wrap: wrap;
+    }
+    
+    .stat-item {
+        flex: 1 1 45%;
+    }
+}
