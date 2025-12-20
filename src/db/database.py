@@ -3,6 +3,7 @@ Gerenciador de banco de dados SQLite para armazenar dados de Stochastic RSI
 """
 
 import sqlite3
+import os
 from pathlib import Path
 from datetime import datetime
 from typing import List, Dict, Optional, Tuple
@@ -14,13 +15,18 @@ class StochRSIDatabase:
     Oferece melhor desempenho, queries eficientes e histórico completo.
     """
     
-    def __init__(self, db_path: str = "data/stoch_rsi.db"):
+    def __init__(self, db_path: str = None):
         """
         Inicializa a conexão com o banco de dados.
         
         Args:
-            db_path: Caminho para o arquivo SQLite
+            db_path: Caminho para o arquivo SQLite.
+                     Se None, usa variável de ambiente DATABASE_PATH ou default "data/stoch_rsi.db"
         """
+        # Usar variável de ambiente se não foi passado db_path
+        if db_path is None:
+            db_path = os.getenv('DATABASE_PATH', 'data/stoch_rsi.db')
+        
         self.db_path = db_path
         Path(db_path).parent.mkdir(parents=True, exist_ok=True)
         self.connection = None
