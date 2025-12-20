@@ -16,7 +16,7 @@ PROJECT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 cd "$PROJECT_DIR"
 
 # Usar banco de dados LOCAL no RPi (não compartilhado pela rede)
-export DATABASE_PATH="$PROJECT_DIR/data/stoch_rsi_local.db"
+export DATABASE_PATH="$PROJECT_DIR/data/stoch_rsi.db"
 
 echo -e "${BLUE}╔════════════════════════════════════════════════════════╗${NC}"
 echo -e "${BLUE}║  Stochastic RSI Dashboard - Raspberry Pi              ║${NC}"
@@ -25,6 +25,9 @@ echo ""
 echo -e "${YELLOW}📁 Projeto: $PROJECT_DIR${NC}"
 echo -e "${YELLOW}📊 Banco (LOCAL): $DATABASE_PATH${NC}"
 echo ""
+
+# Exportar variável para subprocessos
+export PYTHONUNBUFFERED=1
 
 # Criar diretórios de logs
 mkdir -p logs data results
@@ -49,14 +52,14 @@ echo ""
 
 # Iniciar servidor API em background
 echo -e "${BLUE}[1/2] Iniciando API Server...${NC}"
-nohup python3 api_server.py > logs/api_server.log 2>&1 &
+nohup env DATABASE_PATH="$DATABASE_PATH" PYTHONUNBUFFERED=1 python3 api_server.py > logs/api_server.log 2>&1 &
 API_PID=$!
 echo -e "${GREEN}✓ API Server iniciado (PID: $API_PID)${NC}"
 sleep 2
 
 # Iniciar loop de atualização em background
 echo -e "${BLUE}[2/2] Iniciando loop de atualização...${NC}"
-nohup python3 update_loop.py > logs/update_loop.log 2>&1 &
+nohup env DATABASE_PATH="$DATABASE_PATH" PYTHONUNBUFFERED=1 python3 update_loop.py > logs/update_loop.log 2>&1 &
 UPDATE_PID=$!
 echo -e "${GREEN}✓ Loop de atualização iniciado (PID: $UPDATE_PID)${NC}"
 
