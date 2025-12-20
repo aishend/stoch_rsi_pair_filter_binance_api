@@ -66,12 +66,21 @@ def sort_rows_by_volume(rows: list) -> list:
     return sorted(rows, key=lambda r: get_symbol_volume(r.get('symbol', '')), reverse=True)
 
 
-def refresh_cache(symbols: list):
+def refresh_cache(symbols: list = None):
     """
     Atualiza cache com dados dos últimos valores para todos os timeframes.
-    Rodado em thread para não bloquear as requisições.
+    Se symbols for None, atualiza TODOS os símbolos do banco.
     """
     try:
+        # Se não especificar símbolos, pegar TODOS do banco
+        if symbols is None or not symbols:
+            with db_lock:
+                symbols = db.get_all_symbols()
+        
+        if not symbols:
+            print("⚠️  Nenhum símbolo para atualizar")
+            return
+        
         new_data = {}
         
         for symbol in symbols:
@@ -101,7 +110,7 @@ def refresh_cache(symbols: list):
         
         cache['data'] = new_data
         cache['timestamp'] = time.time()
-        print(f"✓ Cache atualizado em {datetime.now().strftime('%H:%M:%S')}")
+        print(f"✓ Cache atualizado em {datetime.now().strftime('%H:%M:%S')} ({len(symbols)} símbolos)")
         
     except Exception as e:
         print(f"✗ Erro ao atualizar cache: {e}")
@@ -235,8 +244,8 @@ def filter_data():
     Filtra dados por status e timeframes.
     
     Parâmetros:
-    - status: oversold, overbought, both
-    - timeframes: 15m,1h,4h,1d (comma-separated)
+    - status: oversold, overbought, both, all (show all pairs)
+    - timeframes: 15m,1h,4h,1d (comma-separated) - ignorado se status=all
     - match: all (todos os timeframes simultâneos)
     
     Exemplo: /api/filter?status=oversold&timeframes=1h,4h&match=all
@@ -258,36 +267,50 @@ def filter_data():
         for symbol in cache['data'].keys():
             symbol_data = cache['data'][symbol]
             
-            matching_timeframes = []
-            
-            # Verificar cada timeframe
-            for timeframe in timeframes_filter:
-                tf_data = symbol_data.get(timeframe)
-                if tf_data:
-                    tf_status = tf_data.get('status')
-                    
-                    # Verificar se status match
-                    if status_filter == 'both':
-                        # Both = oversold OU overbought
-                        if tf_status in ['oversold', 'overbought']:
-                            matching_timeframes.append(timeframe)
-                    else:
-                        # Status específico
-                        if tf_status == status_filter:
-                            matching_timeframes.append(timeframe)
-            
-            # Deve ter em TODOS os timeframes selecionados
-            if len(matching_timeframes) == len(timeframes_filter):
+            # Se status é 'all', mostrar todos os pares
+            if status_filter == 'all':
                 row = {
                     'symbol': symbol,
                     'timeframes': {},
-                    'matching': matching_timeframes
+                    'matching': TIMEFRAMES  # Mostrar todos os timeframes
                 }
                 
                 for timeframe in TIMEFRAMES:
                     row['timeframes'][timeframe] = cache['data'][symbol].get(timeframe)
                 
                 filtered_rows.append(row)
+            else:
+                # Filtro por status específico com timeframes selecionados
+                matching_timeframes = []
+                
+                # Verificar cada timeframe
+                for timeframe in timeframes_filter:
+                    tf_data = symbol_data.get(timeframe)
+                    if tf_data:
+                        tf_status = tf_data.get('status')
+                        
+                        # Verificar se status match
+                        if status_filter == 'both':
+                            # Both = oversold OU overbought
+                            if tf_status in ['oversold', 'overbought']:
+                                matching_timeframes.append(timeframe)
+                        else:
+                            # Status específico
+                            if tf_status == status_filter:
+                                matching_timeframes.append(timeframe)
+                
+                # Deve ter em TODOS os timeframes selecionados
+                if len(matching_timeframes) == len(timeframes_filter):
+                    row = {
+                        'symbol': symbol,
+                        'timeframes': {},
+                        'matching': matching_timeframes
+                    }
+                    
+                    for timeframe in TIMEFRAMES:
+                        row['timeframes'][timeframe] = cache['data'][symbol].get(timeframe)
+                    
+                    filtered_rows.append(row)
         
         # Ordenar por volume decrescente
         filtered_rows = sort_rows_by_volume(filtered_rows)
@@ -298,7 +321,7 @@ def filter_data():
             'count': len(filtered_rows),
             'filters': {
                 'status': status_filter,
-                'timeframes': timeframes_filter,
+                'timeframes': timeframes_filter if status_filter != 'all' else 'all',
                 'match': 'all (simultâneo)'
             },
             'timestamp': datetime.now().isoformat()
@@ -317,9 +340,19 @@ def manual_refresh():
     try:
         with db_lock:
             symbols = db.get_all_symbols()
-        threading.Thread(target=refresh_cache, args=(symbols,), daemon=True).start()
-        return jsonify({'status': 'Refresh iniciado'})
+        
+        # Fazer refresh de forma SÍNCRONA para garantir que está completo
+        refresh_cache(symbols)
+        
+        return jsonify({
+            'status': 'Refresh concluído',
+            'symbols_count': len(symbols),
+            'cache_timestamp': datetime.now().isoformat()
+        })
     except Exception as e:
+        print(f"Erro em /api/refresh: {e}")
+        import traceback
+        traceback.print_exc()
         return jsonify({'error': str(e)}), 500
 
 

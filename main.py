@@ -6,10 +6,26 @@ Suporta modo teste com -test para processar apenas os primeiros 5 pares
 import json
 import sys
 import argparse
+import requests
 from config import TIMEFRAMES
 from src.api.binance import BinanceClient
 from src.core.calculator import StochRSICalculatorCore
 from src.db.database import StochRSIDatabase
+
+
+def notify_api_refresh():
+    """Notifica a API para fazer refresh do cache após calcular pares"""
+    try:
+        response = requests.post('http://localhost:8000/api/refresh', timeout=10)
+        if response.status_code == 200:
+            data = response.json()
+            print(f"✓ Cache atualizado: {data.get('symbols_count', '?')} símbolos")
+        else:
+            print(f"⚠️  API retornou status {response.status_code}")
+    except requests.exceptions.ConnectionError:
+        print("⚠️  API não está rodando (http://localhost:8000)")
+    except Exception as e:
+        print(f"⚠️  Erro ao notificar API: {e}")
 
 
 def save_results(results: dict, filename: str = "results/stoch_rsi_results.json"):
@@ -188,6 +204,12 @@ def main():
     
     # Fechar conexão com banco
     db.close()
+    
+    # Notificar a API para fazer refresh do cache
+    print("\n🔄 Atualizando cache da API...")
+    notify_api_refresh()
+    
+    print("✓ Pronto!")
 
 
 if __name__ == "__main__":

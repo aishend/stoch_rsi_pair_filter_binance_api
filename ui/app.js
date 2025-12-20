@@ -18,6 +18,50 @@ async function init() {
     
     // Aplicar filtro padrão (oversold + 1h,4h) automaticamente
     await applyFilter();
+    
+    // Auto-refresh a cada 15 segundos para pegar mudanças rápido
+    setInterval(async () => {
+      try {
+        await applyFilter();
+      } catch (err) {
+        console.error('Erro ao auto-atualizar:', err);
+      }
+    }, 15000);  // 15 segundos
+    
+    // Adicionar event listeners APÓS DOM estar pronto
+    document.getElementById('resetBtn').addEventListener('click', clearFilter);
+    
+    // Filtro - radio status (permite desselecionar)
+    document.querySelectorAll('.filter-radio[data-status]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        // Se já está selecionado, desseleciona
+        if (btn.classList.contains('active')) {
+          btn.classList.remove('active');
+        } else {
+          // Caso contrário, deseleciona os outros e seleciona esse
+          document.querySelectorAll('.filter-radio[data-status]').forEach(b => b.classList.remove('active'));
+          btn.classList.add('active');
+        }
+        applyFilter();
+      });
+    });
+    
+    // Filtro - toggle timeframe (múltiplos)
+    document.querySelectorAll('.filter-btn[data-timeframe]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        // Verificar se é o último ativo
+        const activeCount = document.querySelectorAll('.filter-btn[data-timeframe].active').length;
+        
+        // Se é o último ativo, não deixar desselecionar
+        if (btn.classList.contains('active') && activeCount === 1) {
+          return;
+        }
+        
+        btn.classList.toggle('active');
+        applyFilter();
+      });
+    });
+    
   } catch (err) {
     console.error('Erro de conexão:', err);
   }
@@ -157,14 +201,21 @@ function setStatus(msg, ready) {
 
 async function applyFilter() {
   try {
-    // Pegar status ativo (apenas um, radio button)
+    // Pegar status ativo (pode ser nenhum)
     const activeStatus = document.querySelector('.filter-radio.active');
-    const status = activeStatus ? activeStatus.dataset.status : 'oversold';
+    const status = activeStatus ? activeStatus.dataset.status : 'all'; // Se nenhum selecionado, mostrar todos
     
-    // Pegar timeframes ativos
-    const activeTimeframes = Array.from(document.querySelectorAll('.filter-btn[data-timeframe].active'))
-      .map(el => el.dataset.timeframe)
-      .join(',');
+    // Se status é 'all', usar TODOS os timeframes, senão usar os selecionados
+    let activeTimeframes;
+    if (status === 'all') {
+      // Mostrar todos os timeframes
+      activeTimeframes = ['15m', '1h', '4h', '1d'].join(',');
+    } else {
+      // Usar timeframes selecionados
+      activeTimeframes = Array.from(document.querySelectorAll('.filter-btn[data-timeframe].active'))
+        .map(el => el.dataset.timeframe)
+        .join(',');
+    }
     
     // Usar "all" para match simultâneo
     const url = `${API}/api/filter?status=${status}&timeframes=${activeTimeframes}&match=all`;
@@ -195,17 +246,7 @@ async function applyFilter() {
 }
 
 async function refreshData() {
-  const btn = document.getElementById('refreshDataBtn');
-  if (btn.classList.contains('updating')) return;
-  
-  btn.classList.add('updating');
-  
-  try {
-    // Reaplicar o filtro atual (mantendo status e timeframes)
-    await applyFilter();
-  } finally {
-    btn.classList.remove('updating');
-  }
+  // Função removida - auto-refresh ativado
 }
 
 function startAutoRefresh() {
@@ -213,9 +254,8 @@ function startAutoRefresh() {
 }
 
 function clearFilter() {
-  // Reset status para oversold
+  // Reset - remove todos os status selecionados (mostrará todos)
   document.querySelectorAll('.filter-radio').forEach(el => el.classList.remove('active'));
-  document.querySelector('.filter-radio[data-status="oversold"]').classList.add('active');
   
   // Reset timeframes para 1h e 4h
   document.querySelectorAll('.filter-btn[data-timeframe]').forEach(el => el.classList.remove('active'));
@@ -231,35 +271,6 @@ function setStatus(msg, ready) {
   status.textContent = msg;
   status.className = ready ? 'status ready' : 'status error';
 }
-
-// Event listeners
-document.getElementById('resetBtn').addEventListener('click', clearFilter);
-document.getElementById('refreshDataBtn').addEventListener('click', refreshData);
-
-// Filtro - radio status (apenas um)
-document.querySelectorAll('.filter-radio[data-status]').forEach(btn => {
-  btn.addEventListener('click', () => {
-    document.querySelectorAll('.filter-radio[data-status]').forEach(b => b.classList.remove('active'));
-    btn.classList.add('active');
-    applyFilter();
-  });
-});
-
-// Filtro - toggle timeframe (múltiplos)
-document.querySelectorAll('.filter-btn[data-timeframe]').forEach(btn => {
-  btn.addEventListener('click', () => {
-    // Verificar se é o último ativo
-    const activeCount = document.querySelectorAll('.filter-btn[data-timeframe].active').length;
-    
-    // Se é o último ativo, não deixar desselecionar
-    if (btn.classList.contains('active') && activeCount === 1) {
-      return;
-    }
-    
-    btn.classList.toggle('active');
-    applyFilter();
-  });
-});
 
 document.addEventListener('visibilitychange', () => {
   if (!document.hidden && state.symbols.length > 0) {

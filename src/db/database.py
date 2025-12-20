@@ -191,20 +191,23 @@ class StochRSIDatabase:
         symbol_id = self.get_or_create_symbol(symbol, volume=volume)
         timeframe_id = self.get_or_create_timeframe(timeframe)
         
+        # Usar timestamp com precisão de milissegundos para evitar UNIQUE constraint em RPi
+        timestamp = datetime.now().strftime('%Y-%m-%d %H:%M:%S.%f')[:-3]  # Milissegundos
+        
         cursor = self.connection.cursor()
         try:
             cursor.execute('''
-                INSERT INTO stoch_rsi_data (symbol_id, timeframe_id, k_value, d_value, rsi_value)
-                VALUES (?, ?, ?, ?, ?)
-            ''', (symbol_id, timeframe_id, k, d, rsi))
+                INSERT INTO stoch_rsi_data (symbol_id, timeframe_id, k_value, d_value, rsi_value, timestamp)
+                VALUES (?, ?, ?, ?, ?, ?)
+            ''', (symbol_id, timeframe_id, k, d, rsi, timestamp))
             self.connection.commit()
         except sqlite3.IntegrityError:
             # Se já existe, atualiza
             cursor.execute('''
                 UPDATE stoch_rsi_data 
-                SET k_value = ?, d_value = ?, rsi_value = ?, timestamp = CURRENT_TIMESTAMP
+                SET k_value = ?, d_value = ?, rsi_value = ?, timestamp = ?
                 WHERE symbol_id = ? AND timeframe_id = ?
-            ''', (k, d, rsi, symbol_id, timeframe_id))
+            ''', (k, d, rsi, timestamp, symbol_id, timeframe_id))
             self.connection.commit()
     
     def save_candles(self, symbol: str, timeframe: str, closes: list, open_times: list = None):
@@ -261,14 +264,17 @@ class StochRSIDatabase:
             (symbol_id, timeframe_id)
         )
         
+        # Usar timestamp com precisão de milissegundos para evitar UNIQUE constraint em RPi
+        timestamp = datetime.now().strftime('%Y-%m-%d %H:%M:%S.%f')[:-3]  # Milissegundos
+        
         # Inserir novo histórico
         for i, value in enumerate(values, 1):
             try:
                 cursor.execute('''
                     INSERT INTO stoch_rsi_history 
-                    (symbol_id, timeframe_id, k_value, d_value, rsi_value, sequence)
-                    VALUES (?, ?, ?, ?, ?, ?)
-                ''', (symbol_id, timeframe_id, value['k'], value['d'], value['rsi'], i))
+                    (symbol_id, timeframe_id, k_value, d_value, rsi_value, sequence, timestamp)
+                    VALUES (?, ?, ?, ?, ?, ?, ?)
+                ''', (symbol_id, timeframe_id, value['k'], value['d'], value['rsi'], i, timestamp))
             except sqlite3.Error as e:
                 print(f"Erro ao salvar histórico: {e}")
         
