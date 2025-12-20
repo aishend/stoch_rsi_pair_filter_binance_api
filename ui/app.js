@@ -1,4 +1,5 @@
-const API = 'http://localhost:8000';
+// Detectar URL base automaticamente (funciona em localhost e RPi)
+const API = `http://${window.location.hostname}:${window.location.port || 8000}`;
 
 let state = {
   symbols: [],
